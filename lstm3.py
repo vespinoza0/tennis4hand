@@ -173,7 +173,16 @@ def addNoise(y):
 	l = y.shape[0]
 	s = np.random.normal(0, 1, l)
 	return y+s
-		
+	
+def plotHisory(epochs,loss,val_loss):
+	epochs = range(1,epochs+1)		  
+	plt.figure()
+	plt.plot(epochs,loss,'bo',label= 'Training acc')
+	plt.plot(epochs,val_loss,'b',label= 'Validation acc')
+	plt.title('Training and validiation Accuracy')
+	plt.legend()
+	plt.show()
+	
 # main stuff
 if __name__ == "__main__":
 	root = tkinter.Tk()
@@ -225,10 +234,10 @@ if __name__ == "__main__":
 	timeSteps =ml
 	co= Xtrain.shape[0]%10
 	co = Xtrain.shape[0]-co
-	Xtrain= xx[:co,:60,:] 
+	Xtrain= xx[:co,:,:] 
 	Xtar = yy[:co]
-	plt.hist(Xtar)
-	plt.show()
+	# plt.hist(Xtar)
+	# plt.show()
 	
 	Xtar = keras.utils.to_categorical(Xtar)
 	# plt.hist(bigArr2)
@@ -238,7 +247,7 @@ if __name__ == "__main__":
 ## test data stuff
 	y_testOg= Xtar
 	batch =5
-	eps = 20
+	eps = 10
 	end = 1-0.2241379 
 	s = round(Xtrain.shape[0]*end)
 	print("this is the 77 mark", s)
@@ -252,7 +261,7 @@ if __name__ == "__main__":
 ## model stuff
 	model = Sequential()	
 	model.add(LSTM(32, return_sequences=True, stateful=True, dropout=0.3, recurrent_dropout=0.3,
-               batch_input_shape=(batch, 60, 3)))
+               batch_input_shape=(batch, timeSteps, 3)))
 	model.add(LSTM(32, return_sequences=True, stateful=True, dropout=0.1,recurrent_dropout=0.1))
 	model.add(LSTM(16, stateful=True, activation = 'relu'))
 	model.add(Dense(5, activation='softmax'))
@@ -264,7 +273,6 @@ if __name__ == "__main__":
 	history = model.fit(Xtrain, Xtar,
 		epochs=eps,
 		batch_size=batch, validation_split=0.2413793)
-		
 	model.save('lstm3_model.h5')
 	print("#############################################################################")
 	#print(y_testOg)
@@ -272,16 +280,24 @@ if __name__ == "__main__":
 	#y_predict = np.argmax(y_predict, axis=1)
 	#print(y_predict)
 	print("#############################################################################")
+	
+	
 
 	y_predict = model.predict_classes(x_test,batch_size=batch)
 	print(y_predict)
 	print("######################################################################")
+	loss = history.history['acc']
+	val_loss = history.history['val_acc']
+	
 
+	
 	p = model.predict_proba(x_test, batch_size = batch)
 
 	target_names= ['0','1','2','3','4']
 	print(classification_report(np.argmax(y_test,axis=1), y_predict))#, target_names=target_names))
 	print(confusion_matrix(np.argmax(y_test,axis=1), y_predict))
+	
+	plotHisory(eps,loss,val_loss)
 	
 
 
